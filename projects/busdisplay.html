@@ -1,8 +1,137 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PCB - Busdisplay">
+    <title>PCB - Busdisplay</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-Content coming soon...
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/projects/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to projects index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>Busdisplay</h1>
+  <h3>A small display that shows what's on an 8-bit bus.</h3>
+  <img src="/images/busdisplay/cover.jpg" alt="Busdisplay board revision 1 and 3" width="80%" height="80%">
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Background</h3>
+	    <p>
+		  This project is my first serious PCB project. Actually it is one of my first attempts at using EasyEDA and JLCPCB for PCBs.
+		  It is the starting point of my transition from perfboards to prototype PCBs and also inspires me to work in embedded full time.
+	    </p>
+	    <p>
+		  There are two inspirations for this board, one is my need to debug my various logic chips projects, 
+		  and another is <a href="https://www.youtube.com/watch?v=7NClJQR-1c4">Julian Ilett's</a> video about his OInK display board.
+		  His board uses a 74HC573 latch and a couple of MC14495 binary to 7-segment drivers. MC14495 is an old chip, therefore I want to
+		  create a similar board with a microcontroller instead.
+	    </p>
+		
+		<h3>First Revision (Jan 2020)</h3>
+		
+		<div class="content-image">
+		  <div class="pure-u-1 pure-u-md-1-3">
+		    <img src="/images/busdisplay/rev1_dec.jpg" alt="Busdisplay revision 1 in decimal mode" width="80%" height="80%">
+		    <p>Decimal Display</p>
+		  </div>
+		  <div class="pure-u-1 pure-u-md-1-3">
+		    <img src="/images/busdisplay/rev1_hex.jpg" alt="Busdisplay revision 1 in hexadecimal mode" width="80%" height="80%">
+		    <p>Hexadecimal Display</p>
+		  </div>
+	    </div>
+		
+		<p>
+		  Very first version designed in EasyEDA. It is powered by a PIC16F57 microcontroller. 
+		  The signal from the bus is buffered by a 74HCT244 octal line buffer IC. The HCT variant is used for TTL compatibility.
+		  The value is constantly sampled and displayed on the display. Hex and Dec could be selected by a jumper.
+	    </p>
+		<p>
+		  This version works fine. However there are several pitfalls I came across later that I want to revise:
+		  <ul>
+			<li>The PIC16F57 does not have an internal oscillator and the crystal driver is pretty sensitive.</li>
+			<li>The board cannot lie flat because there are several parts on the PCB bottom.</li>
+			<li>The 74HCT244 pinout makes it hard to route all the signals.</li>
+			<li>Many packages (TSSOP-20, 0603x4, etc.) are hard to solder for beginner. Ends up pretty horrible on my first attempt back then too.</li>
+			<li>Parts under the display! More space saving but not beginner friendly.</li>
+			<li>No pullup on the Hex/Dec jumper. (Yes, this MCU is so old there are no internal pullups!)</li>
+			<li>ICSP header does not work.</li>
+		  </ul>
+		</p>
+		
+		<h3>Second Revision (May 2021)</h3>
+		
+		<div class="content-image">
+		  <div class="pure-u-1">
+		    <img src="/images/busdisplay/rev2.png" alt="Busdisplay revision 2 3D render" width="80%" height="80%">
+		    <p>Revision 2 3D render in KiCad</p>
+		  </div>
+	    </div>
+		
+		<p>
+		  A year later I decided I will try to sell these little boards. Therefore I start a revision work on it.
+		  All the issues in the first version are fixed, however there are still some things I did not like in it.
+		  Since at this point I realized that the PIC16F57 is no longer the cheapest choice, I decided to scrap this version
+		  and move to version 3.
+	    </p>
+		<p>
+		  Some details I still don't like, just for reference:
+		  <ul>
+			<li>Still requires an external crystal. 5032 crystal is not that easy to solder.</li>
+			<li>Weird jumper configuration requires for the ICSP to work.</li>
+			<li>The board size is a little bit too large for a cost-effective PCB panel.</li>
+		  </ul>
+		</p>
+		
+		<h3>Third Revision (Jun 2021)</h3>
+		
+		<div class="content-image">
+		  <div class="pure-u-1 pure-u-md-1-3">
+		    <img src="/images/busdisplay/rev3_dec.jpg" alt="Busdisplay revision 3 in decimal mode" width="80%" height="80%">
+		    <p>Decimal Display</p>
+		  </div>
+		  <div class="pure-u-1 pure-u-md-1-3">
+		    <img src="/images/busdisplay/rev3_hex.jpg" alt="Busdisplay revision 3 in hexadecimal mode" width="80%" height="80%">
+		    <p>Hexadecimal Display</p>
+		  </div>
+	    </div>
+		
+		<p>
+		  This is the revision that entered real production. All of the issues and nuisances in both revision 1 and 2 were fixed.
+		  I am pretty pleased with how this board turns out and it's quite popular on Tindie because it is cheap.
+	    </p>
+		<p>
+		  Improvements made in this version compared to version 1 and 2:
+		  <ul>
+			<li>Change the MCU to PIC16F570. Now cheaper and has internal oscillator.</li>
+			<li>Change the buffer chip to 74HCT245 bus transceiver. Much much easier to route and solder.</li>
+			<li>Add a bulk capacitor and a pullup resistor for Hex/Dec jumper just in case.</li>
+			<li>ICSP no longer has to share its pins with peripherals, so jumpers are no longer needed.</li>
+			<li>No longer has parts on the bottom layer or under the display. (The pony is though. :/)</li>
+			<li>Replace all hard-to-solder parts for larger and easier ones.</li>
+			<li>Resize the board to 33x50 mm. This means the 3x2 panel will fit in the 100x100 mm discount size limit at cheap PCB mfgs, given that there are no edge rails.</li> 
+		  </ul>
+		</p>
+		
+		<h4>~~~~~</h4>
+		<h4>Last Update: 12 Dec 2022</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
 </body>
