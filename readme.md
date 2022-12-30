@@ -1,3 +1,3 @@
 # SleepyPonyLabs website source
 
-Source code for sleepyponylabs.com built with [Pure.css](https://purecss.io)
+Source code for https://sleepyponylabs.com built with [Pure.css](https://purecss.io)
