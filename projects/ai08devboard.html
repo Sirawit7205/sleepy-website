@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PCB - Busdisplay">
+    <title>PCB - AI08 Devboard</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/projects/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to projects index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>AI08 Devboard</h1>
+  <h3>A devboard for SAM&WING AI08 8-Channel Capacitive Touch Controller IC</h3>
+  <img src="/images/ai08/cover.jpg" alt="AI08 devboard revision 1" width="80%" height="80%">
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Background</h3>
+	    <p>
+		  Back in September 2022, I found a category on LCSC about <a href="https://www.lcsc.com/products/Touch-Sensors_902.html">capacitive touch controllers</a>.
+		  The touch controller chips come in all sizes (single input to many) and types (I2C, parallel output, etc.) and is a useful chip if you need to
+		  add touch support for your projects, so I want to try out one of them, the SAM&WING AI08. 
+		  (From their <a href="http://www.xmxwdz.com/">website</a> the company name is actually Xiamen Xinwang Electronic Technology. LCSC can be weird sometimes.)
+	    </p>
+		<p>
+		  <i>Note: The PCB for this project was sponsored by Aisler using Beautiful Boards Budget specifications.</i>
+		</p>
+		
+		<h3>First Revision (Sep 2022)</h3>
+		
+		<div class="content-image">
+		  <div class="pure-u-1">
+		    <img src="/images/ai08/ai08_notouch.jpg" alt="AI08 Devboard on standby" width="60%" height="80%">
+		    <p>The chip on standby (no touch)</p>
+		  </div>
+		  <div class="pure-u-1">
+		    <img src="/images/ai08/ai08_touch.jpg" alt="AI08 Devboard detecting touch event on channel 5" width="60%" height="80%">
+		    <p>The chip when a touch event is detected (on channel 5)</p>
+		  </div>
+	    </div>
+		
+		<p>
+		  <h4>The Circuit</h4>
+		  The <a href="https://datasheet.lcsc.com/lcsc/2208221130_Sam-wing-AI08_C521987.pdf">AI08</a> is an 8-channel capacitive touch controller.
+		  (Not to be confused with the <a href="https://datasheet.lcsc.com/lcsc/2209301830_Sam-wing-AI08B-SOP16_C5185737.pdf">AI08B</a>.)
+		  This chip requires just a few additional passive components: C1 capacitor, CSEL capacitor, Vcc decoupling capacitor, and series resistors on each input channel.
+		  <ul>
+		    <li>C1 capacitor is an "internal balancing capacitor" which is 4.7nF.</li>
+			<li>CSEL capacitor selects the input sensitivity. Leaving this floating set the max sensitivity. You can add up to 100pF to lower the sensitivity.</li>
+			<li>1K Ohms Series resistors are there from the datasheet. Not all chips required them but this one does.</li>
+			<li>The datasheet also suggests adding a 20 Ohms resistor at the Vcc pin, I don't know why but it is not required for it to work.</li>
+		  </ul>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/ai08/ai08_circuit.png" alt="AI08 Circuit" width="80%" height="80%">
+		      <p>The AI08 circuit on my devboard</p>
+		    </div>
+	      </div>
+		</p>
+		
+		<p>
+		  <h4>Touch Sensor Design</h4>
+		  For this part I referred to the <a href="https://www.microchip.com/en-us/application-notes/an2934">Microchip Capacitive Touch Sensor Design Application Note AN2934</a>
+		  and went with the simple 12mm rounded rectangle button sensor design, which is inside the range recommended by the AI08 datasheet (3*3mm to 30*30mm).
+		  The pitch between each sensor is 6mm, as suggested in the Microchip appnote for 12mm sensor.
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/ai08/captouch_12mm.png" alt="12mm button sensor footprint" width="60%" height="80%">
+		      <p>The button sensor I made for the board</p>
+		    </div>
+	      </div>
+		</p>
+
+		<p>
+		  <h4>Output and Additional Features</h4>
+		  <p>
+		    The AI08 outputs a 4-bit active-high BCD signal. It outputs 1111 when no touch is detected, and outputs channel number minus 1 when touch is detected.
+			The chip works like a priority encoder. When multiple touch events were detected, it will only output the one with highest priority. The highest priority is channel 1, and lowest is 8.
+		  </p>
+		  <p>
+		    This chip also features a sleep mode and auto-calibration mode. If no touch event was detected for 80 seconds it will enter sleep mode.
+			The chip will start the auto-calibration process when exiting the sleep mode. Auto-calibration takes 48 seconds but does not affect touch detection.
+			This is very important because without initial calibration the chip will not work correctly. 
+			When first powered up (or if the board had been moved to a new location), let the board sit for at least a minute before touching the sensors.
+			The calibration seems to persist between power cycles so that's useful. 
+			The datasheet said the chip will output 1011 during calibration but I haven't observed that behavior on my board.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/ai08/output.png" alt="AI08 function table" width="60%" height="80%">
+		      <p>AI08 Function Table (Source: Datasheet)</p>
+		    </div>
+	      </div>
+		  <p>
+		    To make things more useful, I decided to add some cheap logic chips to the board to decode the output further. Check out the KiCad schematic for more info on these.
+			<ul>
+			  <li>U5 is a 74HC138 decoder. The AI08 outputs conveniently allows us to just use this simple chip to decode the BCD output into parallel outputs for each channel.
+			      74HC138 can be replaced by 74HC238 if you want an active-high output. You will need to adjust JP1 jumper and LED soldering direction too.</li>
+			  <li>U3 is a 74HC11 triple 3-input AND gates and U4 is a 74AHC1G04 NOT gate. These two chips decode output 1011 and 1111 to create a "no detection" and "calibration" flags.
+			      The MSB bit of the BCD output is used to disable the 74HC138 decoder while either of the flags are active.</li>
+			</ul>
+		  </p>
+		</p>
+		
+		</p>
+		  <h4>Points for Improvement</h4>
+		  This board turns out pretty good. There are no design bug that I am aware of. However there are still some points for improvement that I might do a revision of them later.
+		  <ul>
+		    <li>The board uses 78L05 (either TO-92 or SOT-89) as an LDO. Turns out the 78xx LDO has a different pinout than most of the rest, such as XC6206 or MCP1700 series.
+		        I want to change this so more flexible LDO choice is possible.</li>
+		    <li>I might do another version with more complex sensor designs. I don't know if this would work out with priority encoder output AI08 has though. 
+			    This might be spun off as a new project with different chip entirely.</li>
+		  </ul>
+		</p>
+		  
+		<h4>~~~~~</h4>
+		<h4>Last Update: 29 Dec 2022</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
+</body>
