@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<meta name="twitter:card" content="summary">
+	<title>TLC59025 Devboard - PCB Project | Sleepy Pony Labs</title>
+	<meta property="og:title" content="TLC59025 Devboard - PCB Project | Sleepy Pony Labs">
+	<meta name="twitter:title" content="TLC59025 Devboard - PCB Project | Sleepy Pony Labs">
+	
+	<meta name="description" content="TLC59025 Devboard - A devboard for TI TLC59025 CC LED Sink Driver IC and clones">
+	<meta property="og:description" content="TLC59025 Devboard - A devboard for TI TLC59025 CC LED Sink Driver IC and clones">
+	<meta name="twitter:description" content="TLC59025 Devboard - A devboard for TI TLC59025 CC LED Sink Driver IC and clones">
+	
+	<meta property="og:image" content="https://www.sleepyponylabs.com/images/tlc59025/main_board.jpg">
+	<meta name="twitter:image" content="https://www.sleepyponylabs.com/images/tlc59025/main_board.jpg">
+	
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://www.sleepyponylabs.com/projects/tlc59025devboard.html/">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/projects/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to projects index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>TLC59025 Devboard</h1>
+  <h3>A devboard for TI TLC59025 Constant-Current LED Sink Driver IC and clones</h3>
+  <img src="/images/tlc59025/main_board.jpg" alt="TLC59025 devboard revision 1" width="80%" height="80%">
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Background</h3>
+	    <p>
+		  I had an idea about building sort of LED light board for train maps. 
+		  This kind of project would required a lot of individual LEDs to be driven.
+		  At first, I thought I will use the ISSI (now Lumissil) <a href="https://www.lumissil.com/assets/pdf/core/IS31FL3236A_DS.pdf">IS31FL3236A</a> 36-Channel PWM LED driver chip for it.
+		  However, since this chip use I2C for communication and limited options for address selection, controlling a lot of these driver will be tricky. A new chip is needed.
+	    </p>
+		<p>
+		  After some digging on LCSC, I found a new chip which is the Macroblock <a href="https://www.lcsc.com/product-detail/LED-Display-Drivers_span-style-background-color-ff0-MBI-span-MBI5124GP-B_C256866.html">MBI5124GP</a>.
+		  This chip is interesting, because it is very easy to control and cascade via SPI (or to be honest, like a typical shift register), very cheap, and could control 16 LED.
+	    </p>
+		<p>
+		  With some help from <a href="https://gregdavill.com/posts/d20/#design-stage">Greg Davill</a> on Discord, he pointed out that this chip (and many more) are actually a clone of Texas Instruments TLC59025.
+		  At this point I really do want to use this chip for the train map so I decided to build a devboard for it just to see what it could do.
+		</p>
+		<p>
+		  <i>Note: I misspelled the chip name. You might see the naming "TL59025" in various locations. This is a typo.</i>
+		</p>
+		<p>
+		  <i>Note: The PCB for this project was sponsored by Aisler using the Beautiful Boards Budget specifications.</i>
+		  <i>You may order this board for yourself at <a href="https://aisler.net/p/IMLSHTDQ">this link</a>.</i>
+		</p>
+		
+		<h3>First Revision (Sep 2022)</h3>
+		
+		<div class="content-image">
+		  <div class="pure-u-1">
+			<iframe width="560" height="315" src="https://www.youtube.com/embed/WXICmL9J7kY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+		    <p>Demo video of three devboards running LED chaser program</p>
+		  </div>
+	    </div>
+		
+		<p>
+		  <h4>The Chip (and its clones)</h4>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/tlc59025/sm16306s.jpg" alt="Picture of many SM16306S chips in a carrier tape" width="60%" height="80%">
+			  <p>Shenzhen Sunmoon Micro SM16306S</p>
+		    </div>
+	      </div>
+		  <p>
+		    TLC59025 has a lot of clones. These cheap clones are popular in LED video wall applications. 
+		    Some clones available on LCSC are listed here. Noted that I will only list the ones with QSOP-24 package that is compatible with this devboard. Other variants might exists.
+		    <ul>
+			  <li>Texas Instruments TLC59025 (original) <a href="https://www.ti.com/lit/ds/symlink/tlc59025.pdf">Datasheet</a></li>
+			  <li>Macroblock MBI5124GP-B <a href="https://datasheet.lcsc.com/lcsc/1808081643_MBI-MBI5124GP-B_C256866.pdf">Datasheet</a></li>
+			  <li>Shenzhen Sunmoon Micro SM16206S <a href="https://datasheet.lcsc.com/lcsc/2003131816_Shenzhen-Sunmoon-Micro-SM16206S_C121618.pdf">Datasheet</a></li>
+			  <li>Shenzhen Sunmoon Micro SM16306S <a href="https://datasheet.lcsc.com/lcsc/2105241639_Shenzhen-Sunmoon-Micro-SM16306S_C2830324.pdf">Datasheet</a></li>
+			  <li>Shenzhen Titan Micro TM5020A <a href="https://datasheet.lcsc.com/lcsc/2203252253_TM-Shenzhen-Titan-Micro-Elec-TM5020A_C2980109.pdf">Datasheet</a></li>
+		    </ul>
+		  </p>
+		  <p>
+		    <i>Note: I use SM16306S clones on the demo boards as the original chip is not available on LCSC.</i>
+		  </p>
+		  <p>
+		    TLC59025 has a lot of cool features. For example:
+		    <ul>
+			  <li>16 Constant-Current LED Sink Drivers</li>
+			  <li>Adjustable output current</li>
+			  <li>Works like a shift register. (Just like two 74HC595 in cascade.)</li>
+			  <li>Can cascade with more chips. (Again, like a 74HC595.)</li>
+			  <li>SPI Compatible</li>
+			  <li>Very cheap. Clones are like 5 cents apiece in larger quantities.</li>
+			  <li>Easy to place and route on the PCB.</li>
+		    </ul>
+		  </p>
+		</p>
+		
+		<p>
+		  <h4>The LED output circuit</h4>
+		  <p>
+		    The devboard features spots for two TLC59025 chips in a cascade configuration, for a total of 32 LEDs per board.
+			(The clock (CLK), latch enable (LE), and output enable (~OE) select signals are in common.)
+			To support further cascading, the cascade in/out headers are also provided.
+			The regulated and unregulated power are also present on the header so you only need to connect your power supply on a single board.
+		  </p>
+		  <p>
+		    Apart from the decoupling capacitors, the chip only requires one single additional component: the R-EXT resistor.
+			This resistor sets the target amount of current to sink from each output channel.
+			Surprisingly this is the part where it gets tricky. Turns out each version of the chip comes with different formula to calculate the output current.
+			Generally, to get the maximum output current you need 500 Ohms, and you leave the pin floating for minimum current. Be sure to check your datasheet!
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/tlc59025/led_circuit.png" alt="LED output circuit" width="100%" height="100%">
+		      <p>The LED output circuit, with 2 drivers and 32 LEDs</p>
+		    </div>
+	      </div>
+		</p>
+
+		<p>
+		  <h4>The control circuit</h4>
+		  <p>
+		    There aren't much to talk about here. An AMS1117 LDO, and a spot for an ATtiny414 microcontroller on the board.
+			The MCU is connected to the driver chips through SPI (remember these are just glorified shift registers!).
+			Some pads and a button are broken out in case you need them, and an UPDI header for programming.
+		  </p>
+		  <p>
+		    I also put a CH340 USB-to-Serial chip on the board. You can use it to send/receive commands through serial port,
+			upload an Arduino sketch alongside a bootloader, or use SerialUPDI to upload your firmware.
+			Here is a quick link to <a href="https://github.com/SpenceKonde/megaTinyCore">MegaTinyCore</a> on GitHub 
+			if you want to learn more about how to use Arduino and SerialUPDI with this MCU and other similar ones.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/tlc59025/control_circuit.png" alt="Control circuit" width="100%" height="100%">
+		      <p>Part of the control circuit: a single ATtiny414 and supporting circuits</p>
+		    </div>
+	      </div>
+		</p>
+		
+		<p>
+		  <h4>Points for Improvement</h4>
+		  This board has one weird bug. For some reason the SerialUPDI circuit interferes with my PICKIT 4.
+		  The programmer refuses to talk with the chip until I remove R5 from the board.
+		  Since I haven't use SerialUPDI before, I will need to investigate further before making a revision to fix it.
+		</p>
+		  
+		<h4>~~~~~</h4>
+		<h4>Last Update: 11 Jan 2023</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
+</body>
