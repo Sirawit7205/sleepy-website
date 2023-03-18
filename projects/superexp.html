@@ -1,8 +1,294 @@
 <!doctype html>
 <html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<meta name="twitter:card" content="summary">
+	<title>Super Exapander - PCB Project | Sleepy Pony Labs</title>
+	<meta property="og:title" content="Super Exapander - PCB Project | Sleepy Pony Labs">
+	<meta name="twitter:title" content="Super Exapander - PCB Project | Sleepy Pony Labs">
+	
+	<meta name="description" content="Super Exapander - What if a microcontroller has 512 I/O Pins?">
+	<meta property="og:description" content="Super Exapander - What if a microcontroller has 512 I/O Pins?">
+	<meta name="twitter:description" content="Super Exapander - What if a microcontroller has 512 I/O Pins?">
+	
+	<meta property="og:image" content="https://www.sleepyponylabs.com/images/superexp/main_board.jpg">
+	<meta name="twitter:image" content="https://www.sleepyponylabs.com/images/superexp/main_board.jpg">
+	
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://www.sleepyponylabs.com/projects/superexp.html/">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-Content coming soon...
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/projects/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to projects index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>Super Expander</h1>
+  <h3>What if a microcontroller has 512 I/O Pins?</h3>
+  <img src="../images/superexp/main_board.jpg" alt="Super Expander board revision 1" width="60%" height="60%">
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+		  <h4>Background</h4>
+		  <p>
+		    The idea for this funny board came up back when JLCPCB had just released their 4L PCB service.
+			Being curious pony, I <i>really</i> want to try this out. One problem is that I had no projects coming up yet.
+			After a quick trip to LCSC and stuff I came up with this board as an excuse.
+			We will go into details later as to how bonkers this board is.
+		  </p>
+		  <p>
+		    Note: The Chinese chip I used on this board (AW9523BTQR) now has the status of NRND (Not Recommended for New Designs). 
+			At the time of writing (15 Mar 2023) there are still around 11k pieces left on LCSC.
+			<b>If you are interested in doing something with this chip, you better order now!</b>
+		  </p>
+		  
+		  <h3>First Revision (May 2022)</h3>
+		  
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <iframe width="560" height="315" src="https://www.youtube.com/embed/fK99GPvH8rA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+			  <p>Demo video of the board in output mode, outputting logic high.</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+			<h4>General Idea</h4>
+			<p>
+		      My design goal of this project is to extend the microcontroller pins out as much as possible, 
+			  while conforming to JLCPCB promotional price size limitation of 100x100mm.
+			  As this is just a silly project I also don't want total BOM cost to be overly expensive as well.
+			</p>
+			<p>
+		      Browsing through LCSC, I realized that there is one interesting chip out there that will fit the purpose:
+			  <b>AW9523BTQRI/O Expander IC</b>, which makes the whole thing possible.
+			</p>
+			<p>
+			  After some long hours, I got a set of 512 I/O pins to fit on a 100x100mm PCB. The board features:
+			  <ul>
+				<li>32 AW9523BTQR I/O Expander chips, in eight group of four chips.</li>
+				<li>512 LEDs on each I/O pin. (Unfortunately not in the sink direction.)</li>
+				<li>PCA9548A 8-Channel I2C Switch IC, to split a single MCU I2C bus into eight.</li>
+				<li>MCP2221A USB-to-I2C chip, for direct control of the board from a computer.</li>
+				<li>2 TCA9517 I2C buffer, for connecting multiple boards together.</li>
+				<li>ATtiny85 microcontroller</li>
+				<li>Power input and reverse voltage protection circuit.</li>
+			  </ul>
+			  Each of the important details will be described below.
+			</p>
+		  </p>
+		  
+		  <p>
+			<h4>AW9523BTQR - Explained</h4>
+			<p>
+		      <a href="https://datasheet.lcsc.com/lcsc/1809192237_AWINIC-Shanghai-Awinic-Tech-AW9523BTQR_C148077.pdf">AW9523BTQR</a> is a 16-bit I/O Expander IC made by Shanghai Awinic Technology.
+			  Its 16 pins are divided into two 8-bit ports which are controlled through I2C.
+			  With two address select pins you can connect up to 4 chips on the same I2C bus.
+			</p>
+			<p>
+			  Each pin is capable of input, output, and constant current sink.
+		      The constant current sink feature is pretty unique and is not available on other popular chips.
+			  You can separately dim LEDs connected to each pin separately in 256 steps.
+			  Each channel can sink maximum of 20mA which is plenty for many usages.
+			</p>
+			<p>
+		      The chip also features pin change interrupt on input channels: you can set which pin will cause an interrupt,
+			  and then if any of the pin changes its level the interrupt signal will be sent on the INTN pin.
+			  (Similar to how PCINT works in ATmega328P.)
+			</p>
+			<p>
+			  There is a caveat though. This chip has a weird POR (Power On Reset i.e. what would the chip do after powering up) behavior.
+			  The pin direction settings and output levels depend on the I2C address you choose through AD0/AD1 pins!
+			  This table is provided in the datasheet to indicate what would happen, but it is still a big pitfall because this is so unique.
+			  Your circuit might need to be in some certain state on startup and you will have to design around the expander.
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/por_table.png" alt="AW9523BTQR POR behavior table" width="100%" height="100%">
+				<p>The POR behavior table based on I2C address (Source: Datasheet)</p>
+		      </div>
+			</div>
+			<p>
+			  The chips are placed onto 8 I2C buses, each with 4 chips (AD0/AD1 pins give 4 address options).
+			  Therefore one "bank" of GPIOs consists of eight 8-bit port, for a total of 64 GPIOs on multiple 1.27mm pin headers.
+			  Each GPIO pin has its own indicator LED. Unfortunately I put them in source configuration instead of sink,
+			  which means I cannot use the constant current mode. This mistake is due to confusion while looking at
+			  the POR table above, making me think I can only use CC mode if the I2C address is 0.
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/gpio_block.png" alt="Typical I/O Expander circuit" width="100%" height="100%">
+				<p>A circuit for each AW9523BTQR chip</p>
+		      </div>
+			</div>
+		  </p>
+		  
+		  <p>
+			<h4>PCA9548A and TCA9517 - We need more I2C buses!</h4>
+			<p>
+			  So now we have all the GPIOs wired up, but we still need to figure the I2C side out.
+			  Most typical microcontrollers have only 1 or 2 I2C peripherals available and we need 8.
+			  <a href="https://www.nxp.com/docs/en/data-sheet/PCA9548A.pdf">PCA9548A</a> is a chip we need.
+			  This neat 8-Channel I2C switch allows us to connect a single I2C bus from our microcontroller
+			  to up to 8 other I2C channels, one or more at a time (you do need to observe maximum bus capacitance and collision though).
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/pca9548_block_diagram.png" alt="PCA9548A Block Diagram" width="60%" height="60%">
+				<p>PCA9548A Block Diagram (Source: Datasheet)</p>
+		      </div>
+			</div>
+			<p>
+			  Controlling this chip is simple. The chip has its own I2C address you need to address.
+			  Then after an ACK from the chip, you send a single byte indicating which line to connect.
+			  You can also read the selection back from the chip by calling to its read address.
+			  To reset the chip and deselects all the channels, set its RESET pin to low.
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/pca9548_circuit.png" alt="PCA9548A Circuit" width="100%" height="100%">
+				<p>I2C Multiplexer circuit (address jumpers not shown)</p>
+		      </div>
+			</div>
+			<p>
+			  Now we got all 8 buses we need, but we're not done yet.
+			  PCA9548A also features three address selection pins (A0-A2), therefore we can connect up to 8 of these chips together!
+			  I've then decided to include some headers on the side of the board to connect multiple of them together.
+			  However, I2C cannot be dragged very long. Its intended use is for short-range communications anyway.
+			  We need additional chip to allow multiple boards to connect reliably.
+			</p>
+			<p>
+			  <b>Note: The I2C buffer circuit is never tested. I cannot tell with certainty if this chip is needed or not
+			  or if it is appropriate for this application. Please use your own judgment.</b>
+			</p>
+			<p>
+			  Entering <a href="https://www.ti.com/lit/ds/symlink/tca9517.pdf">TCA9517</a> Level-Shifting I2C Buffer.
+			  This chip allows the I2C bus to be extended further while maintaining the bus capacitance.
+			  Its Level-Shifting feature allows both side of the I2C signal to operate at different voltages (between 0.9-5.5V and 2.7-5.5V).
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/tca9517_circuit.png" alt="TCA9517 Circuit (untested)" width="100%" height="100%">
+				<p>TCA9517 repeater circuits for board cascading (untested)</p>
+		      </div>
+			</div>
+			<p>
+			  To sum it all up, we can connect 8 of these boards together and set different address for PCA9548A on each one.
+			  Making the hypothetical maximum amount of GPIOs to be <b>4096 (!!!)</b> which is probably not practical but fun to think about.
+			</p>
+		  </p>
+		  
+		  <p>
+		    <h4>The microcontroller</h4>
+			<p>
+			  On this board I put a single ATtiny85 on it as a microcontroller. 
+			  As to why I select it, it's just a jellybean part for me back then and it does have a peripheral called
+			  USI (Universal Serial Interface) that looks good enough for I2C. I regretted this decision a lot.
+			</p>
+			<p>
+			  First, USI is a very bare bone serial peripheral.
+			  It only has a byte of data register, a byte of buffer, some start/stop conditions detection, and some additional controls.
+			  It can't even generate its own clock signal. After reading o many forum posts about USI I still have no idea
+			  how to use it for I2C. At this point even ancient PIC12 seems to have better-sounding implementation of I2C.
+			</p>
+			<p>
+			  Second, the pinout of ATtiny85 is of typical old Atmel style: GND at the bottom left and VDD at the top right, like a logic chip.
+			  This means I cannot put any of the newer chip in the Microchip era (with proper peripherals) 
+			  on the existing PCB because Microchip style puts GND at the last pin (i.e. pin 8) and VDD at pin 1.
+			</p>
+			<p>
+			  In conclusion, I'm stuck unable to do anything to the board unless I spin up a new batch of boards with
+			  different microcontroller (which will need a major overhaul because the AW9523BTQR is now NRND),
+			  or figure out how to get USI to do I2C for me. Luckily I still could control the board to some degree
+			  due to the existence of the USB-to-I2C chip on the PCB.
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/mcu_circuit.png" alt="ATtiny85 Circuit" width="80%" height="80%">
+				<p>ATtiny85 Circuit. The resistors are in place so the ICSP will not be interfered by the I2C device.</p>
+		      </div>
+			</div>
+		  </p>
+		  
+		  <p>
+			<h4>MCP2221A - Controlling I2C Directly from a Computer</h4>
+			<p>
+			  <a href="http://ww1.microchip.com/downloads/en/devicedoc/20005565b.pdf">MCP2221A</a> is a USB-to-I2C bridge IC,
+			  an upgrade of the old MCP2221 with higher maximum baud rate of 460800. This chip allows the computer to directly 
+			  connect to any I2C devices (plus four GPIOs and a UART) and acts as a USB CDC or HID class device to a computer.
+			  Microchip provides both configuration utility for setting the chip up and control software/library to interface
+			  it with your own application. I've tried both of these and they are actually really useful.
+			  The demo video above is created by me sending I2C commands from my computer using Microchip's MCP2221 CLI.
+			</p>
+			<p>
+			  To check out more about the tools and libraries available, <a href="https://www.microchip.com/en-us/product/MCP2221A">see the official product page</a>.
+			  There are quite a lot of details that I will not be able to fully describe here.
+			</p>
+			<div class="content-image">
+			  <div class="pure-u-1">
+				<img src="../images/superexp/mcp2221_circuit.png" alt="MCP2221A Circuit" width="80%" height="80%">
+				<p>MCP2221A Circuit. GPIO3 is an activity indicator, and GPIO2 is used to control the reset signal.</p>
+		      </div>
+			</div>
+		  </p>
+		  
+		  <p>
+		    <h4>Some Afterthoughts</h4>
+			<p>
+			  Apart from the circuit itself, there are also other things to talk about.
+			  This board may be made just for fun, but it had given me quite a lot of experiences such as:
+			  <ul>
+				<li>Designing and ordering a 4-layer board from JLCPCB. (They are offering 8L for 2$ now. What a time to be alive.)</li>
+				<li>Designing with new class of chips: I2C switch and repeater.</li>
+				<li>Soldering with solder paste and a hot air gun. (First project that I use my soldering station to assemble.)</li>
+				<li>Soldering parts smaller than 0603: 0402 and 0402x4.</li>
+				<li>Soldering leadless QFN parts with a hot air gun.</li>
+			  </ul>
+			  It took me a week to solder the whole board and I broke <i>a lot</i> of QFN chips during the process,
+			  but it is pretty rewarding to be honest.
+			</p>
+		  </p>
+		  
+		<p>
+		  <h4>Points for Improvement</h4>
+		  <p>
+			As I already stated above, the I/O expander chip I used for this board is now NRND.
+			The most obvious thing I need to do (if there's still interest in this experiment board)
+			is to find a replacement chip with similar price (30 cents each at 30 pcs) and functionality.
+			Unfortunately, this chip is one of the cheapest of the kind, and most of other chips
+			with similar price point are either PCF8574 clones or 8 GPIOs devices,
+			and none has the constant current functionality similar to the old chip.
+			Here are some examples of what I could find on LCSC:
+			<ul>
+			  <li>CH423S: A classic from WCH. Has 8 GPIOs and 16 sink-only inputs. The only one that is cheaper than the old chip.</li>
+			  <li>PCA9555: Do have 16 GPIOs. Clones are around x2 the price of the old chip and the NXP chip is x4.</li>
+			  <li>PCA9557: Have 8 GPIOs without anything much to talk about. Half the price of PCA9555.</li>
+			  <li>PI4IOE5V6408: An obscure Diodes/Pericom chip. 8 GPIOs with voltage translation. Price is similar to PCA9555.</li>
+			</ul>
+			I will check back once in a while. Maybe we can unearth some sort of weird chip in the abyss of LCSC.
+			For now I will let this board sit in my "complete" bin until there's a real need for it in the future.
+		  </p>
+		</p>
+		  
+		<h4>~~~~~</h4>
+		<h4>Last Update: 18 Mar 2023</h4>
+	  </div>
+	</div>
+  </div>
+</div>
 </body>
