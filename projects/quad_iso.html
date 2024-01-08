@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<meta name="twitter:card" content="summary">
+	<title>Quad Isolated Serial Adapter - PCB Project | Sleepy Pony Labs</title>
+	<meta property="og:title" content="Quad Isolated Serial Adapter - PCB Project | Sleepy Pony Labs">
+	<meta name="twitter:title" content="Quad Isolated Serial Adapter - PCB Project | Sleepy Pony Labs">
+	
+	<meta name="description" content="Quad Isolated Serial Adapter for RS232, RS485, and UART">
+	<meta property="og:description" content="Quad Isolated Serial Adapter for RS232, RS485, and UART">
+	<meta name="twitter:description" content="Quad Isolated Serial Adapter for RS232, RS485, and UART">
+	
+	<meta property="og:image" content="https://www.sleepyponylabs.com/images/quad_iso/main_board.jpg">
+	<meta name="twitter:image" content="https://www.sleepyponylabs.com/images/quad_iso/main_board.jpg">
+	
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://www.sleepyponylabs.com/projects/quad_iso.html/">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/projects/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to projects index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>Quad Isolated Serial Adapter</h1>
+  <h3>Isolated USB to RS232, RS485, and UART adapter based on WCH CH344Q IC</h3>
+  <img src="/images/quad_iso/main_board.jpg" alt="Quad Isolated Serial Adapter revision 1" width="80%" height="80%">
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Background</h3>
+	    <p>
+		  In 2022, we started working with high-voltage DC systems at work. 
+		  It did not take long before those HVDC leaked into the USB-to-Serial adapter while debugging the circuit, killing it and the computer.
+		  We also found another issue: we don't have enough serial ports.
+		  It was common that we need to communicate with 2 or 3 devices at the same time and the 1-channel adapters are hogging up all the USB ports.
+		  Those two problems are what inspired me to build this isolated USB-to-serial adapter that contains 4 serial channels.
+	    </p>
+		<p>
+		  Apart from some hiccups and bad USB connector soldering jobs, the board works great and is real useful at work.
+		  The BOM cost of it is very expensive compared to my other works but I believe they have good value and
+		  this is no doubt one of the best PCB I had built up to this point.
+	    </p>
+		<p>
+		  <i>Note: The PCB for this project was sponsored by Aisler using the Beautiful Boards HD 4L specifications.</i>
+		  <i>You may order this board for yourself at <a href="https://aisler.net/p/QCJIQNDV">this link</a>.</i>
+		</p>
+		
+		<h3>First Revision (Nov 2022)</h3>
+		
+		<p>
+		  <h4>Summary of Features</h4>
+		  <ul>
+		    <li>CH344Q quad-channel USB-to-Serial IC
+			  <ul>
+			    <li>Max speed of 6M baud (limited by isolators speed however)</li>
+			    <li>1024 bytes of RX FIFO buffer and 512 bytes of TX FIFO buffer per channel</li>
+				<li>2x RS485, 1x RS232, and 1x 5V UART channels</li>
+				<li>Auto direction control for RS485 channels</li>
+				<li>Full modem signals IO (for RS232 and UART channels)</li>
+				<li>RX, TX, and Ready indication LEDs</li>
+				<li>Reset button (to reconnect to the computer without removing the cable)</li>
+			  </ul>
+			</li>
+			<li>Isolation between the USB and Serial sides
+			  <ul>
+			    <li>ADM2483 dedicated RS485 isolation IC</li>
+				<li>ADM3251 dedicated RS232 isolated IC</li>
+				<li>Digital Isolator ICs for other signals</li>
+				<li>1W 5V isolated DC/DC converter</li>
+			  </ul>
+			</li>
+			<li>Misc. Features
+			  <ul>
+			    <li>USB Type-C Connector with TVS and Fuse protection</li>
+				<li>Degson 3.5mm terminal blocks for serial channels</li>
+				<li>RS485 120 Ohms termination resistors (can be turned on/off)</li>
+				<li>Power indicators on both side of the isolation</li>
+				<li>USB reset and flow control mode buttons</li>
+				<li>Design to fit a Futurebox FB17 project box</li>
+			  </ul>
+			</li>
+		  </ul>
+		</p>
+		
+		<p>
+		  <h4>CH344 IC</h4>
+		  <p>
+		    CH344 is a 4-channel USB-to-Serial IC made by WCH. It is available in two variants: <a href="https://datasheet.lcsc.com/lcsc/2108231730_WCH-Jiangsu-Qin-Heng-CH344L_C2887250.pdf">CH344L</a> 
+		    and <a href="https://datasheet.lcsc.com/lcsc/2204181615_WCH-Jiangsu-Qin-Heng-CH344Q_C2988084.pdf">CH344Q</a>.
+		    The CH344L variant supports VDD of 3.3V-5V and max baud rate of 230400, while the CH344Q variant is more expensive and only supports VDD of 3.3V 
+		    but the baud rate could go up to 6M and contains more features.
+		    This board uses the CH344Q variant for maximum baud rate.
+		  </p>
+		  <p>
+		    <b>Note: Although both variants use the same LQFP-48 package, they are NOT pin-compatible and works slightly different in some aspects.
+		    See the datasheet of both variants to see which one works best for you.</b>
+		  </p>
+		  <p>
+		    When plugged into the PC, four serial ports would show up as "USB-Enhanced-Serial" A to D, which is connected to serial channel 0 to 3 respectively.
+		    WCH also supplies a configuration tool <a href="https://www.wch-ic.com/downloads/CH34xSerCfg_ZIP.html">CH34xSerCfg</a> 
+		    (requires <a href="https://www.wch-ic.com/downloads/CH343SER_EXE.html">this driver</a> to be installed first)
+		    that can be used to set various parameters of the chip such as operation mode, VID/PID, custom device name, etc.
+		    I personally did not set anything with the tool but feel free to look around.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/quad_iso/ch34xsercfg.png" alt="CH34xSerCfg tool by WCH" width="100%" height="80%">
+		      <p>CH34xSerCfg tool by WCH</p>
+		    </div>
+	      </div>
+		</p>
+		
+		<p>
+		  <h4>Digital Isolators</h4>
+		  <p>
+		    Based on the requirements at the time and the features of the CH344Q, I decided that the adapter will have two RS485 channels, one RS232 channel, and one UART channel.
+		    To isolate the USB side and serial port side, we need to use a type of chip called digital isolators.
+		    These chips provide galvanic isolation between each side of the chip (usually called side A and B). They could isolate up to 5kV DC so the USB port and computer would be protected.
+			Since the A and B side requires separate power sources they typically works as a logic level translator too, but check the datasheet first.
+		  </p>
+		  <p>
+		    There are two types of these devices:
+			<ul>
+			  <li>Generic I/O Isolation. Could be use with typical push-pull signals such as UART and modem signals.</li>
+			  <li>Interface Isolation. They isolate one type of interface only, such as RS485, RS232, CAN, I2C, etc.</li>
+			</ul>
+			On this board I use both of them, which I will go into details below.
+		  </p>
+		</p>
+		
+		<p>
+		  <h4>ADM2483 - Isolated RS485 Transceiver</h4>
+		  <p>
+		    <a href="https://www.analog.com/media/en/technical-documentation/data-sheets/adm2483.pdf">ADM2483</a> is a pretty popular RS485 transceiver chip from Analog Devices.
+			It provides 2.5kV isolation, max 500k baud rate, and 3V-5V support.
+			The usage is straightforward because it's pretty much an isolated version of MAX3485 with slower speed.
+			A single catch of this chip is the PV pin (pin 7). Turns out this chip requires an external voltage supervisor IC to be attached to this pin for the correct POR behavior.
+			The PV pin should be driven low when the A side voltage is below 2V. A cheap 809R or 809Z IC would be enough, but still a bummer.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/quad_iso/adm809.png" alt="PV pin voltage supervisor circuit" width="40%" height="80%">
+			  <p>PV pin voltage supervisor circuit (Source: Datasheet)</p>
+		    </div>
+		  </div>
+		</p>
+		
+		<p>
+		  <h4>ADM3251E - Isolated RS232 Transceiver</h4>
+		  <p>
+		    <a href="https://www.analog.com/media/en/technical-documentation/data-sheets/adm3251e.pdf">ADM3251E</a> is one of a few isolated RS232 transceiver chip in the market today.
+			Turns out Analog Devices is the only one making this kind of chip, and this particular one is the only one that is not LGA/BGA and is not too expensive.
+			It provides 2.5kV isolation, max 460k baud rate, and 5V support. Again, it is pretty easy to use, just the typical four 100nF charge pump capacitors like a typical transceiver IC.
+			What's impressive about this chip is that it only requires a single 5V power source. The chip provides its own isolated 5V source on the RS232 side.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/quad_iso/adm3251e.png" alt="ADM3251E Block Diagram" width="60%" height="80%">
+			  <p>ADM3251E Block Diagram (Source: Datasheet)</p>
+		    </div>
+		  </div>
+		</p>
+		
+		<p>
+		  <h4>CA-IS37xx Series Digital Isolators</h4>
+		  <p>
+		    CA-IS37xx Series is a generic I/O isolators from Shanghai Chipanalog Microelectronics.
+			This series features 2, 3, 4, or 6 isolation channels per chip and various TX/RX channel count configurations.
+			They provides 3.75kV-5kV isolation, max 150M baud rate, and 2.5V-5V support.
+			<a href="http://e.chipanalog.com/web/bocupload/2023/12/06/231205%E5%B7%9D%E5%9C%9F%E5%BE%AE%E7%94%B5%E5%AD%90%E4%BA%A7%E5%93%81%E9%80%89%E5%9E%8B%E6%89%8B%E5%86%8C_en.pdf">
+			You can check out all of their lineup here</a>.
+		  </p>
+		  <p>
+			For this board, I use the following chips:
+			<ul>
+			  <li>CA-IS3720HG - 2 channels in one direction only. 5kV Isolation. Use for RS232 modem signals.</li>
+			  <li>CA-IS3741HW - 4 channels, one are reversed direction. 5kV Isolation. Use for UART isolation.</li>
+			  <li>CA-IS3742HW - 4 channels, two are reversed direction. 5kV Isolation. Use for UART and RS232 modem signals.</li>
+			</ul>
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/quad_iso/chipanalog.png" alt="Some CA-IS37xx chips available" width="100%" height="80%">
+			  <p>Some CA-IS37xx chips available</p>
+		    </div>
+		  </div>
+		</p>
+		
+		<p>
+		  <h4>Power Isolation</h4>
+		  <p>
+		    Since we need power supply on the other side of isolation, we need to use power isolation modules.
+			These are tiny black box with isolation transformer inside that could provide around 1-2W of power.
+			On this board I use the B0505 isolator that could provide 1W of power (200mA at 5V).
+		  </p>
+		  <p>
+		    Although this power module could work by itself, they recommended placing a 10nF Y-class safety capacitor between both ground of the circuit, so I also add that.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/quad_iso/b0505.jpg" alt="B0505LS-1W Power Module and Y-Class Capacitor on the PCB" width="40%" height="80%">
+			  <p>B0505LS-1W Power Module and Y-Class Capacitor on the PCB</p>
+		    </div>
+		  </div>
+		</p>
+		
+		<p>
+		  <h4>Enclosure</h4>
+		  <p>
+		    This board has been designed to fit in a 
+			<a href="https://www.futurekitshop.com/product/72/futurebox-fb17-%E0%B8%81%E0%B8%A5%E0%B9%88%E0%B8%AD%E0%B8%87%E0%B8%AD%E0%B9%80%E0%B8%99%E0%B8%81%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%AA%E0%B8%87%E0%B8%84%E0%B9%8C">Future Box FB17 box</a>, 
+			which explains the weird shape of the PCB.
+			The board fits perfectly. The problem is that I will have to cut the holes for connectors, LEDs, and switches myself.
+			I don't really have tools or time to do that so it remains without an enclosure for now.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+			  <img src="/images/quad_iso/box_alignment.png" alt="How the PCB was designed around the FB17 box in KiCad" width="100%" height="80%">
+			  <p>How the PCB was designed around the FB17 box in KiCad</p>
+		    </div>
+		  </div>
+		</p>
+		
+		<p>
+		  <h4>Points for Improvement</h4>
+		  <ul>
+		    <li>The footprint of U9 (CA-IS3720HG) is incorrect. SOIC-8W is wider than other wide SOIC footprints. I should have used KiCad footprint...</li>
+			<li>Add voltage selection for UART. Chipanalog chips could work down to 2.5V anyway.</li>
+			<li>Change the enclosure to one with pre-cut holes.</li>
+		  </ul>
+		</p>
+		  
+		<h4>~~~~~</h4>
+		<h4>Last Update: 7 Jan 2024</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
+</body>
