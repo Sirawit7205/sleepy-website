@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<meta name="twitter:card" content="summary">
+	<title>HTB Cyber Apocalypse 2024 Writeup Vol 2 | Sleepy Pony Labs</title>
+	<meta property="og:title" content="HTB Cyber Apocalypse 2024 Writeup Vol 2 | Sleepy Pony Labs">
+	<meta name="twitter:title" content="HTB Cyber Apocalypse 2024 Writeup Vol 2 | Sleepy Pony Labs">
+	
+	<meta name="description" content="Writeup for HTB Cyber Apocalypse 2024 - The PROM">
+	<meta property="og:description" content="Writeup for HTB Cyber Apocalypse 2024 - The PROM">
+	<meta name="twitter:description" content="Writeup for HTB Cyber Apocalypse 2024 - The PROM">
+	
+	<meta property="og:image" content="https://www.sleepyponylabs.com/images/htb_ctf_2024/prom/cover.png">
+	<meta name="twitter:image" content="https://www.sleepyponylabs.com/images/htb_ctf_2024/prom/cover.png">
+	
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://www.sleepyponylabs.com/blog/htb_ctf_2024_prom.html/">
+    
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/blog/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to blog index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>Sleepy Pony @ Cyber Apocalypse 2024 CTF!</h1>
+  <h2>Vol 2: The PROM</h2>
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Preface</h3>
+	    <p>
+		  This is my first time trying my hands on a CTF event: <b>HackTheBox Cyber Apocalypse 2024</b>!
+		  I'm no hacker, but this event has a <i>hardware</i> category, so my friend invited me to a team to try them out.
+		  It turned out better than I thought! I was able to solve <b>all</b> of the 5 hardware CTFs! And here's my writeup.
+	    </p>
+		
+		<h3>The PROM - Medium</h3>
+		
+		<div>
+		  <h4>Problem Statement</h4>
+		  <p>
+			<i>After entering the door, you navigate through the building, evading guards, and quickly locate the server room in the basement. 
+			Despite easy bypassing of security measures and cameras, laser motion sensors pose a challenge. 
+			They're controlled by a small 8-bit computer equipped with AT28C16 a well-known EEPROM as its control unit. Can you uncover the EEPROM's secrets?</i>
+		  </p>
+	    </div>
+		
+		<div>
+		  <h4>What's Provided?</h4>
+		  <ul>
+		    <li>A Docker instance</li>
+		  </ul>
+		</div>
+		
+		<div>
+		  <h4>Capturing the Flag</h4>
+		  <p>
+		    <b>Important Note:</b> This CTF used to contain bugs on the first couple days of the event.
+			This writeup is made based on the fixed version.
+		  </p>
+		  <p>
+			Upon connecting to the terminal, we are welcomed by this lovely help message about a chip <b>AT28C16</b>.
+			(Really, I love that ASCII art! It looks great!)
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/help.png" alt="The PROM Help Message" width="80%" height="80%">
+		      <p>The PROM Help Message</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Let's Talk about the PROM</h4>
+		  <p>
+		    Unfortunately we are not talking about a prom event here. The PROM mentioned in this CTF is an abbreviation for <b>Programmable Read Only Memory</b>.
+			You might not noticed it, but these tiny chips, big and small, are used everywhere a circuit designer need to store something.
+			From storing a configuration data, to your computer's BIOS, to data logging, they are the hidden gem that make our world running.
+		  </p>
+		  <p>
+		    Specifically for this CTF, we are working with a Microchip (former Atmel) Parallel EEPROM chip AT28C16.
+			You can grab a datasheet from <a href="https://ww1.microchip.com/downloads/en/DeviceDoc/doc0540.pdf">here</a> to follow along.
+		  </p>
+		  <p>
+		    <b>AT28C16</b> is an EEPROM (Electronically Erasable and Programmable Read Only Memory) 
+			unlike ROM and PROM that cannot be erased at all, or EPROM that would need a UV Eraser to erase it,
+			you can read, write, and erase the data on the EEPROM with just electronics circuits.
+			This particular chip can store 16 kilo-bits of data in an 8-bit architecture, i.e. 2048 bytes of data.
+			Communication with this chip is easy but tedious. Parallel protocol means you will need quite a lot of wires to read and write stuff.
+			There are three control pins: (!CE, !OE and !WE), 11 address pins, and 8 I/O data pins you need to control.
+			We will go into details later on the next section.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/at28c16.jpg" alt="Real Life AT28C16 in a DIP-24 Package" width="60%" height="60%">
+		      <p>Real Life AT28C16 in a DIP-24 Package (Source: eBay)</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Playing with the Chip</h4>
+		  <p>
+		    From the help menu, there are not that many things we can do with the chip (it is a very rudimentary chip):
+			<ul>
+			  <li>Set the voltage on the !CE, !OE, and !WE pins.</li>
+			  <li>Set the voltage on each of the 11 address pins.</li>
+			  <li>Set the voltage on each of the 8 I/O pins.</li>
+			  <li>Read and write data from/to the I/O pins one byte at a time.</li>
+			</ul>
+			Noted that the CLI uses <i>voltage</i> as inputs instead of logic level. This will become important later.
+		  </p>
+		  
+		  <p>
+		    Due to the bug in the simulation, we discovered a lot of details in the CLI while trying to enable the chip:
+			<ul>
+			  <li>The <code>set_address_pins</code> and <code>set_io_pins</code> commands do validate the inputs well so you cannot enter invalid config.</li>
+			  <li>The <code>set_address_pins</code> and <code>set_io_pins</code> commands parameters are MSB-first.</li>
+			  <li>The <code>read_byte</code> and <code>write_byte</code> commands also do check if the chip is in the correct config before proceeding.</li>
+			  <li>If you use it wrong enough, the chip will release smoke. You have to disconnect from the terminal and reconnect if this happens.</li>
+			  <li>The !OE pin and A9 pin both support 12V input, just like in the datasheet.</li>
+			</ul>
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/wrong_input.png" alt="Some Example of CLI Inputs" width="60%" height="60%">
+		      <p>Some Example of CLI Inputs</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Reading from the Chip</h4>
+		  <p>
+		    To read a byte from this chip, you need to do the following:
+			<ol>
+			  <li>Set the !CE (Chip Enable) pin low.</li>
+			  <li>Set the !OE (Output Enable) pin low.</li>
+			  <li>Set the !WE (Write Enable) pin high.</li>
+			  <li>Set the address on the A0-A11 pins to the address you want.</li>
+			  <li>Probe the data on the I/00-I/07 pins.</li>
+			  <li>Repeat step 4 and 5 as much as you need.</li>
+			</ol>
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/read_byte.png" alt="Example Byte Read Step" width="60%" height="60%">
+		      <p>Example Byte Read Step</p>
+		    </div>
+	      </div>
+		  
+		  <h4>It's all empty!</h4>
+		  <p>
+		    After some random read across all address range, we found that every address are 0x00 - it's all empty!
+			(Well, technically empty memory chips are all 0xFF, that's how they physically work, but whatever.)
+		  </p>
+		  <p>
+		    Going back to the findings above, we know that <b>the !OE pin and A9 pin both support 12V input</b>.
+			Weird right? Why would you need that? The !OE pin uses this voltage as part of a chip-erase operation.
+			(Note that this also works alongside the !WE pin as a write-protection mechanism.)
+			And the A9 pin uses this to read the <b>Device Identification Block</b>.
+			It is another 32 bytes of memory hidden in plain sight!
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/ident.png" alt="Chip Erase and Device Identification Instruction" width="60%" height="60%">
+		      <p>How long would you take to notice this in the datasheet?</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Reading the Secrets Out</h4>
+		  <p>
+		    Now to dump the Device Identification Block, we have to raise the A9 pin to 12V and read from address 0x7E0 to 0x7FF.
+			Looks like there's something here! You can use a script to do it, or do it manually since it's just 32 bytes.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/prom/id_block.png" alt="Reading the first three bytes of the ID Block" width="60%" height="60%">
+		      <p>We have something here!</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    At the end we got these bytes out (in hex)
+		  </p>
+		  <code>
+		    48 54 42 7b 41 54 32 38 43 31 36 5f 45 45 50 52<br>
+			4f 4d 5f 73 33 63 32 33 74 5f 31 64 21 21 21 7d
+		  </code>
+		  <p>
+		    Which could be converted to our flag! Which is...
+		  </p>
+		  <code>
+		    <b>HTB{AT28C16_EEPROM_s3c23t_1d!!!}</b>
+		  </code>
+		</div>
+		
+		<h4>~~~~~</h4>
+		
+		<p>
+		  <h4>Here is the end of Vol 2. On the next volume we will go into the real stuff: <a href="https://www.sleepyponylabs.com/blog/htb_ctf_2024_rids">Rids and Flash-ing Logs</a></h4>
+		</p>
+		
+		<h4>~~~~~</h4>
+		<h4>Last Update: 14 Mar 2024</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
+</body>
