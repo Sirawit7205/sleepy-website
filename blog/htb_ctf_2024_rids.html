@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<meta name="twitter:card" content="summary">
+	<title>HTB Cyber Apocalypse 2024 Writeup Vol 3 | Sleepy Pony Labs</title>
+	<meta property="og:title" content="HTB Cyber Apocalypse 2024 Writeup Vol 3 | Sleepy Pony Labs">
+	<meta name="twitter:title" content="HTB Cyber Apocalypse 2024 Writeup Vol 3 | Sleepy Pony Labs">
+	
+	<meta name="description" content="Writeup for HTB Cyber Apocalypse 2024 - Rids and Flash-ing Logs">
+	<meta property="og:description" content="Writeup for HTB Cyber Apocalypse 2024 - Rids and Flash-ing Logs">
+	<meta name="twitter:description" content="Writeup for HTB Cyber Apocalypse 2024 - Rids and Flash-ing Logs">
+	
+	<meta property="og:image" content="https://www.sleepyponylabs.com/images/htb_ctf_2024/rids/cover.png">
+	<meta name="twitter:image" content="https://www.sleepyponylabs.com/images/htb_ctf_2024/rids/cover.png">
+	
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://www.sleepyponylabs.com/blog/htb_ctf_2024_rids.html/">
+    
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/pure-min.css">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.5/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/ce52e489fc.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="custom-wrapper pure-g header" id="menu">
+  <div class="pure-u-1 pure-u-md-1-3 pure-u-lg-1-4 pure-u-xl-1-6">
+    <div class="home-menu pure-menu pure-menu-fixed">
+      <a class="pure-menu-heading" href="/blog/index.html">
+		<i class="fa fa-arrow-left"></i>
+		Back to blog index</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <h1>Sleepy Pony @ Cyber Apocalypse 2024 CTF!</h1>
+  <h2>Vol 3: Rids and Flash-ing Logs</h2>
+  
+  <div class="content-body">
+    <div class="pure-g">
+	  <div class="pure-u-1">
+	    <h3>Preface</h3>
+	    <p>
+		  This is my first time trying my hands on a CTF event: <b>HackTheBox Cyber Apocalypse 2024</b>!
+		  I'm no hacker, but this event has a <i>hardware</i> category, so my friend invited me to a team to try them out.
+		  It turned out better than I thought! I was able to solve <b>all</b> of the 5 hardware CTFs! And here's my writeup.
+	    </p>
+		
+		<h3>Rids - Easy</h3>
+		
+		<div>
+		  <h4>Problem Statement</h4>
+		  <p>
+			<i>Upon reaching the factory door, you physically open the RFID lock and find a flash memory chip inside. 
+			The chip's package has the word W25Q128 written on it. Your task is to uncover the secret encryption keys 
+			stored within so the team can generate valid credentials to gain access to the facility.</i>
+		  </p>
+	    </div>
+		
+		<div>
+		  <h4>What's Provided?</h4>
+		  <ul>
+		    <li>A Docker instance</li>
+			<li>One zip file</li>
+		  </ul>
+		</div>
+		
+		<div>
+		  <h4>Capturing the Flag</h4>
+		  <p>
+			First, we open the zip file. Inside is a single python script <b>client.py</b>
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/rids/client.png" alt="client.py script file" width="100%" height="100%">
+		      <p>client.py script file</p>
+		    </div>
+	      </div>
+		  <p>
+		    There is a single function inside called <b>exchange</b>.
+			This function uses a python library <a href="https://pypi.org/project/pyftdi/">pyftdi</a>.
+			Pyftdi is a library for communicating with FTDI USB IC directly from Python.
+			FTDI is a brand well-known for their USB-to-Serial chips such as FT232RL. You can easily find them in microcontroller devboards and such.
+			In this code it connects to the <a href="https://www.ftdichip.com/old2020/Support/Documents/DataSheets/ICs/DS_FT2232H.pdf">FT2232H</a>
+			USB-to-Multipurpose Interface IC. It can be connected to UART/JTAG/I2C/ SPI/Bit-Bang devices to control them right on your computer.
+		  </p>
+		  <p>
+		    The rest of the function are just for sending and receiving binary data to/from the target device via network.
+			You have to specify your Docker instance so the script knows where to connect.
+			To use this function, simply provide a list of command bytes to send to the target device, and amount of bytes you expected to get back.
+		  </p>
+		  <p>
+		    One example is provided in the file. <code>exchange([0x9F], 3)</code> will send a command byte 0x9F to the target, and try to get 3 bytes of response back.
+			In this case, a JEDEC ID of a memory chip (one byte each for manufacturer, type, and capacity of the chip).
+		  </p>
+		  
+		  <h4>Our Memory Chip</h4>
+		  <p>
+		    From the problem statement, we have to work with a memory chip again. This time a Winbond W25Q128 Serial Flash Memory IC.
+			You can grab a datasheet from <a href="https://www.winbond.com/resource-files/w25q128fv%20rev.m%2005132016%20kms.pdf">here</a> to follow along.
+		  </p>
+		  <p>
+		    <b>W25Q128</b> is a flash memory IC with a capacity of 128Mbit in an 8-bit architecture. 
+			Unlike the AT28C16 in the last challenge, this chip uses a serial protocol to communicate.
+			All modern memory chips these days use various serial protocol such as SPI and I2C because they offer greater flexibility,
+			better speed, and much easier wiring. This chip only has 8 pins!
+		  </p>
+		  <p>
+		    This chip supports SPI, DSPI, QSPI, and QPI protocols. Based on the FT2232H's capabilities, we assume the CTF uses SPI.
+			This is by far the most common way and offers pretty decent speed of 104Mhz.
+		  </p>
+		  <p>
+		    While the chip is also a memory chip, it is much more complex than a simple EEPROM.
+			We will dig deeper later while we go through the challenge.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/rids/w25q128.png" alt="Real Life W25Q128 in a SOIC-8 Package" width="60%" height="60%">
+		      <p>Real Life W25Q128 in a SOIC-8 Package (Source: eBay)</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Dumping Data</h4>
+		  <p>
+		    First we attempt to dump a data out from the chip. The provided client script and the chip allows us to read as many bytes as we want
+			but for the ease of reading we decided to read 256 bytes at a time.
+			To communicate with this chip, we need to consult the <b>Instruction Set</b> of the chip provided in the datasheet.
+			This will provided us with a command bytes syntax required for each operation with the chip.
+			For this challenge (and the Flash-ing Logs as well) we only need the Instruction Set Table 2, as you can see below.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/rids/instruction_set_1.png" alt="W25Q128 Instruction Set Table 1" width="100%" height="100%">
+		      <p>W25Q128 Instruction Set Table 1 (Source: Datasheet)</p>
+		    </div>
+	      </div>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/rids/instruction_set_2.png" alt="W25Q128 Instruction Set Table 2" width="100%" height="100%">
+		      <p>W25Q128 Instruction Set Table 2 (Source: Datasheet)</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    To read data, we need to use the <b>Read Data</b> command. The command syntax is:
+			<ol>
+			  <li>Send command byte 0x03</li>
+			  <li>Send first address to read (3 bytes, big-endian)</li>
+			  <li>Send 8 dummy clock cycles, the chip will output 1 byte of data.</li>
+			  <li>The chip auto-increment to the next address, so we can just keep clocking it for more bytes.</li>
+			</ol>
+			If you are confused, I suggest you read about the <a href="https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/all">SPI protocol</a> at Sparkfun first.
+		  </p>
+		  
+		  <p>
+		    So we try to dump the first 256 bytes. The command would be <code>exchange([0x03, 0x00, 0x00, 0x00])</code>
+			and this is what we got:
+		  </p>
+		  <code>
+			> python .\client.py<br>
+			[72, 84, 66, 123, 109, 51, 109, 48, 50, 49, 51, 53, 95, 53, 55, 48, 50, 51, 95, 53, 51, 99, 50, 51, 55, 53, 
+			95, 102, 48, 50, 95, 51, 118, 51, 50, 121, 48, 110, 51, 95, 55, 48, 95, 53, 51, 51, 33, 64, 125, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255]
+		  </code>
+		  
+		  <p>
+		    The first few bytes that are not 255 looks shiny! It's the flag! Convert them to ASCII and you got...
+		  </p>
+		  <code>
+		    <b>HTB{m3m02135_57023_53c2375_f02_3v32y0n3_70_533!@}</b>
+		  </code>
+		
+		<h3>~~~~~</h3>
+		
+		<h3>Flash-ing Logs - Hard</h3>
+		
+		<div>
+		  <h4>Problem Statement</h4>
+		  <p>
+			<i>After deactivating the lasers, you approach the door to the server room. It seems there's a secondary flash memory inside, 
+			storing the log data of every entry. As the system is air-gapped, you must modify the logs directly on the chip to avoid detection. 
+			Be careful to alter only the user_id = 0x5244 so the registered logs point out to a different user. 
+			The rest of the logs stored in the memory must remain as is.</i>
+		  </p>
+	    </div>
+		
+		<div>
+		  <h4>What's Provided?</h4>
+		  <ul>
+		    <li>A Docker instance</li>
+			<li>One zip file</li>
+		  </ul>
+		</div>
+		
+		<div>
+		  <h4>Capturing the Flag</h4>
+		  <p>
+			First, we open the zip file. Inside is the same python script <b>client.py</b> as the Rids challenge.
+			This CTF also use the same W25Q128 memory chip as the target so we will not go over that again.
+		  </p>
+		  <p>
+		    The interesting part is a C source code file <b>log_event.c</b>.
+			As you can see in the problem statement, this memory IC is used to record door entry events
+			so C code is most likely how the door records its entry logs.
+			Our task here is to find all log entries with user ID 0x5244 and replaces the user ID of these logs 
+			with someone else's ID to hide our presence while not modifying anything else.
+			This means we need to write something to the chip, not just read!
+		  </p>
+		  
+		  <h4>The Door Log</h4>
+		  <p>
+		    Before we could do anything else, we have to know how the door records its log.
+			<b>log_event.c</b> is quite large but I will only go over what is matter for the challenge.
+		  </p>
+		  
+		  <p>
+		    First, we can see that each log entry is a <code>SmartLockEvent</code>
+			structure comprising of timestamp, event type, user ID, unlock method, and result.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/struct.png" alt="SmartLockEvent Structure" width="80%" height="80%">
+		      <p>SmartLockEvent Structure</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    In the <code>log_event</code> function, after verifying the chip and making sure the target address is empty,
+			we can see that it took the SmartLockEvent structure, serialized it, then calculate a CRC32 checksum and attached it to the end of the log.
+			Finally it calls the <code>write_to_flash</code> function to write the serialized data. The rest are just debug info.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/logging.png" alt="Part of the log_event Function" width="100%" height="100%">
+		      <p>Part of the log_event Function</p>
+		    </div>
+	      </div>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/crc32.png" alt="CRC32 Checksum Calculation Function" width="80%" height="80%">
+		      <p>CRC32 Checksum Calculation Function</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    In the <code>write_to_flash</code> function, we can see that it doesn't just write the data. It encrypts the data first!
+			Before writing to the chip, it calls <code>encrypt_data</code> function.
+			This function first get the encryption key from the <code>read_security_register</code> function and put it in an array.
+			Then it XOR each byte of the key array with the input data <b>excluding the CRC32 checksum</b> and return the data back.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/encrypt.png" alt="encrypt_data and write_to_flash Functions" width="100%" height="100%">
+		      <p>encrypt_data and write_to_flash Functions</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    So now our game plan is as follows:
+			<ol>
+			  <li>Dumping all the log data from the chip.</li>
+			  <li>Find the encryption key.</li>
+			  <li>Decrypt the log data.</li>
+			  <li>Find all user ID 0x5244 and replace them with a new value.</li>
+			  <li>Re-calculate the checksum of those logs.</li>
+			  <li>Re-encrypt all the logs.</li>
+			  <li>Write the new data back into the chip.</li>
+			  <li>Read the flag from the chip somehow.</li>
+			</ol>
+			Sounds easy, but they all come with caveats as we will soon see.
+		  </p>
+		  
+		  <h4>Dumping the data</h4>
+		  <p>
+		    This step is the same as Rids challenge, I dump the data in batches of 256 bytes and found 2560 bytes of log data,
+			from address 0x000000 to 0x0009FF. I put it in a text file for now for later processing.
+		  </p>
+		  
+		  <h4>Where's the Encryption Key???</h4>
+		  <p>
+		    There's one problem here right from the first step: <b> the source of the <code>read_security_register</code> function is not provided.</b>
+			We have no idea just by looking at this C file. Time to go to the datasheet!
+		  </p>
+		  <p>
+		    In the Instruction Set table, we spotted something similar: the <b>Read Security Register</b> command.
+			Going to the description of this command shows us that this chip features three of these 256-bytes registers
+			that can be locked into read-only mode (OTP or One Time Program mode) by setting their lock bits.
+			These bytes are located in a separate memory region and therefore requires a special command to access.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/block_diagram.png" alt="Block Diagram of the W25Q128" width="100%" height="100%">
+		      <p>Here you can see the security registers on the top right of the block diagram (Source: Datasheet)</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    Now we need to make a guess from those C functions. 
+			<code>register_number</code> parameter got passed from the <code>write_to_flash</code> function and this is always 1. 
+			Another mystery parameter is a constant 0x52.
+			This probably means Security Register 1 Offset 0x52. Also the key length is defined in the code as 12 bytes.
+			To verify, I read from the chip with command <code>exchange([0x48, 0x00, 0x10, 0x52, 0x00], 12)</code> and got this:
+		  </p>
+		  <code>
+		    [57, 222, 106, 153, 38, 93, 254, 137, 108, 6, 72, 83]
+		  </code>
+		  <p>
+		    Looks promising! To proof that this is really our key, first thought is to find the encrypted version of user ID 0x5244
+			since we know that exists somewhere, and the key position are always static. However due to pony confusion (we will go into that later),
+			I failed to find that ID. I turned my attention to the timestamp instead. I took the first 4 bytes of data: <code>[135, 116, 216, 252]</code>
+			and XOR them with the first 4 bytes of key <code>[57, 222, 106, 153]</code>. The result is <code>[190, 170, 178, 101]</code>, or
+			<code>[0xBE, 0xAA, 0xB2, 0x65]</code> in hex. Checking the number <b>0x65B2AABE (or 1706207934)</b> with a <a href="https://www.unixtimestamp.com/">Unix Timestamp Converter</a>
+			shows that it is a timestamp for <b>Thu Jan 25 2024 18:38:54</b> which is reasonable. I assumed at this point that we are on the right track.
+			Also, <b>we now know that this is a <a href="https://en.wikipedia.org/wiki/Endianness">little-endian</a> system</b>, 
+			which is important when we need to work with 16 and 32 bytes values in the log.
+		  </p>
+		  
+		  <h4>Structure Memory Alignment</h4>
+		  <p>
+		    The reason I failed to find a matching user ID earlier is because I forgot about structure memory alignment in C.
+			C structures are just a continuous bytes in memory that can store all of the data we specified.
+			We can just reserved the exact amount we need, but to increase the performance of the program, C compiler will
+			optimize the memory allocation to align with how the CPU fetches the data. 
+			If you want to learn more about this, you can read this <a href="https://levelup.gitconnected.com/how-struct-memory-alignment-works-in-c-3ee897697236">Medium article</a>.
+			The alignment is dependent on the architecture of the computer, but it's most likely 32 or 64 bits alignment.
+		  </p>
+		  <p>
+		    Now it's more like taking an educated guess. A quick <code>sizeof(SmartLockEvent)</code> returns 12 bytes. This means a particular online C compiler I used uses 32-bit alignment
+			because 12 can be divided by 4 cleanly. This also aligns greatly by the fact that our encryption key is 12 bytes long.
+			Combining this with a 4-byte CRC32 checksum means one log is 16 bytes long.
+			To know exactly how each byte is allocated, we can use a <code>union</code>.
+			C union is similar to struct, but all of the variables inside are allocated the same block of memory. 
+			This means we can union a SmartLockEvent with plain 12-byte array to print the exact value of each byte.
+			This is the resulting structure of the SmartLockEvent struct plus checksum:
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/alignment.png" alt="SmartLockEvent Memory Alignment" width="100%" height="100%">
+		      <p>SmartLockEvent Memory Alignment</p>
+		    </div>
+	      </div>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/union.png" alt="Finding the Memory Alignment with Union" width="80%" height="80%">
+		      <p>Finding the Memory Alignment with Union</p>
+		    </div>
+	      </div>
+		  
+		  <h4>Revealing the Logs</h4>
+		  <p>
+		    Now that we know the memory alignment and the encryption key, we can easily decrypt the log.
+			I wrote a short python script that takes the data from the chip, decrypt them, and format the data into the CSV form.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/decrypt.png" alt="A Python Script to Decrypt the Logs" width="100%" height="100%">
+		      <p>A Python Script to Decrypt the Logs</p>
+		    </div>
+	      </div>
+		  <p>
+		    Here's some of the decrypted logs:
+		  </p>
+		  <code>
+		    1706207934, 5, 575, 1, 1<br>
+			1706262045, 249, 879, 2, 1<br>
+			1706322958, 108, 28, 3, 1<br>
+			1706325696, 5, 952, 2, 1<br>
+			1706353558, 108, 28, 2, 1<br>
+			...<br>
+			1712644769, 215, 575, 2, 1<br>
+			1712702755, 214, <b>21060</b>, 1, 1<br>
+			1712714687, 187, <b>21060</b>, 3, 1<br>
+			1712723427, 187, <b>21060</b>, 3, 1<br>
+			1712750575, 214, <b>21060</b>, 3, 1<br>
+		  </code>
+		  <p>
+		    Here we are. There are 4 log entries with userId = 0x5244 (21060 in decimal).
+		  </p>
+		  
+		  <h4>Making the New History</h4>
+		  <p>
+		    Now we just need to change 21060 to any other user ID. I decided to change them to 575 (from other log entries).
+		    Then, we can just calculate the new checksum for the logs and encrypt them
+			using the original functions in the <code>log_event.c</code> file.
+			We can replace the last 64 bytes in the original data and now we have the altered log ready to be put back in the chip.
+		  </p>
+		  
+		  <p>
+		    Before we continue, we have to understand some important nature of flash memory chips first.
+			Unlike an EEPROM chips, <b>flash memory chip cannot be written or erased at the byte level</b> (byte granularity).
+			You typically have to write and erase in groups of continuous bytes called pages or blocks.
+			For this particular chip, you can write the data one page at a time (max 256 bytes),
+			and you can erase the data one sector (4KB), one block (32 or 64KB), or the whole chip at a time.
+			See the block diagram above for more details.
+		  </p>
+		  <p>
+		    Another thing is that, <b>you cannot write to the memory location that had already been written to without erasing it first</b>.
+			You can think of these memory chips as a big array of bits, each bit has a "fuse" it in. 
+			When this fuse is intact we read the bit as one and when the fuse is blown we read zero.
+			The chip in its factory condition comes with all fuses intact. That's why empty memory are read as 0xFF.
+			Writing to the chip is actually "blowing" the fuses on the bits that have to be zeroes, leaving ones untouched.
+			This is how old ROM chips physically works. In EEPROM chip the only difference is that we can "un-blowing" the bits by erasing them.
+			We need to erase before write because that is the only way to turn zeroes back into ones.
+		  </p>
+		  <p>
+		    Last thing, to perform any action that will alter the data on the chip, such as writing or erasing, we need to pull the chip's !WP pin high,
+			and send the <b>Write Enable</b> command first. This step must be done before every data-altering commands. (Note that the !WP pin step
+			is handled by the server and we don't have to do that in this challenge.)
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/write.png" alt="Write and Erase Description in the Datasheet" width="60%" height="60%">
+		      <p>Write and Erase Description in the Datasheet</p>
+		    </div>
+	      </div>
+		  
+		  <p>
+		    We might only need to alter 64 bytes of data, but due to the fact that we need to erase before writing and that the smallest
+			granularity of erase we can do is 4KB, we literally have to erase everything and write every log entries back in, 256 bytes at a time.
+		  </p>
+		  <p>
+		    First step is to erase the existing log data from the chip. Since all the data are 2560 bytes long and starts from address 0x000000,
+			Everything are in the first 4KB sector. To erase this, we have to use the <b>Sector Erase (4KB)</b> command.
+			To execute this, we first enable writing with the <code>exchange([0x06])</code> command, then
+			erase the first sector with <code>exchange([0x20, 0x00, 0x00, 0x00])</code> command.
+			To verify that the operation was successful, try reading the first 256 bytes. It should be all 255.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/verify.png" alt="Reading the first 256 bytes are return 255" width="100%" height="100%">
+		      <p>It's all gone!</p>
+		    </div>
+	      </div>
+		  <p>
+		    To write the data, again we need to enable writing with <code>exchange([0x06])</code> command.
+			Then we use the <b>Page Program</b> command. The syntax is: <code>0x02 + page address + max 256 bytes of data</code>.
+			Since we already have log data in blocks of 256 bytes, 
+			we just need to add 0x02 and page address in front of each list and write all of them one by one.
+		  </p>
+		  <div class="content-image">
+		    <div class="pure-u-1">
+		      <img src="/images/htb_ctf_2024/flashing/write_cmd.png" alt="Python Script for Writing New Data into the Chip" width="100%" height="100%">
+		      <p>Python Script for Writing New Data into the Chip</p>
+		    </div>
+	      </div>
+		  <p>
+		    To verify that the data is in, you can query them out to see if 255s have been replaced by our data.
+			If not then go back to your Python script to check for errors, then try again. (Don't forget to erase first!)
+		  </p>
+		  
+		  <h4>Now what?</h4>
+		  <p>
+		    Now that user ID 0x5244 are all gone and we've covered all of our tracks, we can go back to our <code>client.py</code> file.
+			There's this tiny line at the top of the file:
+		  </p>
+		  <code>
+		    FLAG_ADDRESS = [0x52, 0x52, 0x52]
+		  </code>
+		  <p>
+		    This sounds like the address of the flag! At first this address contains only 255s. But what does it contains now?
+			We run a quick command <code>exchange([0x03, 0x52, 0x52, 0x52], 256)</code> and here's the result:
+		  </p>
+		  <code>
+			> python .\client.py<br>
+			[72, 84, 66, 123, 110, 48, 55, 104, 49, 110, 57, 95, 49, 53, 95, 53, 51, 99, 117, 50, 51, 95, 119, 49, 55,
+			104, 95, 112, 104, 121, 53, 49, 99, 52, 49, 95, 52, 99, 99, 51, 53, 53, 33, 64, 125, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 
+			255, 255, 255, 255, 255, 255, 255, 255]
+		  </code>
+		  <p>
+		    Hey! What's that! It's no longer all 255s! 
+			Convert them to ASCII and you got the last flag to conclude the hardware section, which is...
+		  </p>
+		  <code>
+		    <b>HTB{n07h1n9_15_53cu23_w17h_phy51c41_4cc355!@}</b>
+		  </code>
+		</div>
+		
+		<h4>~~~~~</h4>
+		
+		<p>
+		  <h4>
+		    Here is the end of Vol 3. To conclude, I think they are a well-made challenges and I enjoyed solving them.
+			I was proud to be able to solve them all and I would like to play again in the future! :D
+		  </h4>
+		</p>
+		
+		<h4>~~~~~</h4>
+		<h4>Last Update: 14 Mar 2024</h4>
+	  </div>
+    </div>
+  </div>
+ </div>
+</body>
