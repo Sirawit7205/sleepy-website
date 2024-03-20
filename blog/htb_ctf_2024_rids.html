@@ -131,7 +131,7 @@
 			but for the ease of reading we decided to read 256 bytes at a time.
 			To communicate with this chip, we need to consult the <b>Instruction Set</b> of the chip provided in the datasheet.
 			This will provided us with a command bytes syntax required for each operation with the chip.
-			For this challenge (and the Flash-ing Logs as well) we only need the Instruction Set Table 2, as you can see below.
+			Below is the Instruction Set of W25Q128 chip. Most of what we need are in table 2.
 		  </p>
 		  <div class="content-image">
 		    <div class="pure-u-1">
@@ -158,7 +158,7 @@
 		  </p>
 		  
 		  <p>
-		    So we try to dump the first 256 bytes. The command would be <code>exchange([0x03, 0x00, 0x00, 0x00])</code>
+		    To dump the first 256 bytes, the command would be <code>exchange([0x03, 0x00, 0x00, 0x00], 256)</code>
 			and this is what we got:
 		  </p>
 		  <code>
@@ -292,7 +292,7 @@
 		  
 		  <h4>Where's the Encryption Key???</h4>
 		  <p>
-		    There's one problem here right from the first step: <b> the source of the <code>read_security_register</code> function is not provided.</b>
+		    There's one problem here: <b> the source code of the <code>read_security_register</code> function is not provided.</b>
 			We have no idea just by looking at this C file. Time to go to the datasheet!
 		  </p>
 		  <p>
@@ -508,7 +508,11 @@
 		</p>
 		
 		<h4>~~~~~</h4>
-		<h4>Last Update: 14 Mar 2024</h4>
+		<h4>Last Update: 20 Mar 2024</h4>
+		<ul>
+		  <li>20 Mar 2024 - Fix typo</li>
+		  <li>14 Mar 2024 - First published</li>
+		</ul>
 	  </div>
     </div>
   </div>
